@@ -9,13 +9,19 @@ import TableRow from "@material-ui/core/TableRow";
 import Toolbar from "@material-ui/core/Toolbar";
 import Typography from "@material-ui/core/Typography";
 import CircularProgress from '@material-ui/core/CircularProgress';
+import { query } from "stardog";
+
 import {
   TableDataAvailabilityStatus,
   columnData,
   columnSelectors,
+  conn,
+  dbName,
 } from "./helpers/constants";
+import {
+  readQuery
+} from "./helpers/queries";
 
-// Let's not take _quite_ the entire browser screen.
 const styles = {
   appInnerContainer: {
     width: "90%",
@@ -88,6 +94,82 @@ class App extends Component {
         </Paper>
       </div>
     );
+  }
+
+  componentDidMount() {
+    this.refreshData();
+  }
+  
+  refreshData() {
+    this.setState({
+      dataState: TableDataAvailabilityStatus.LOADING
+    });
+    query.execute(conn, dbName, readQuery).then(res => {
+      if (!res.ok) {
+        this.setState({
+          dataState: TableDataAvailabilityStatus.FAILED
+        });
+        return;
+      }
+  
+      const { bindings } = res.body.results;
+      const bindingsForTable = this.getBindingsFormattedForTable(bindings);
+  
+      this.setState({
+        dataState: TableDataAvailabilityStatus.LOADED,
+        data: bindingsForTable
+      });
+    });
+  }
+  
+  // Our SPARQL query returns a new "row" (i.e., variable binding) for each
+  // character for each movie in which the character appears. We don't want to
+  // _display_ multiple rows for the same character, though. Instead, we want
+  // to show _one_ row for each character, and, if the character was in several
+  // movies, we want to show them as a group within that character's single row. This
+  // method goes through the bindings, groups them under each individual
+  // character's id, then merges them together, aggregating the movies as an
+  // array of strings. It also cleans up some of the data so that it's more
+  // readable in the UI.
+  getBindingsFormattedForTable(bindings) {
+    // Group the bindings by each character id, in case multiple rows were
+    // returned for a single character.
+    const bindingsById = bindings.reduce((groupedBindings, binding) => {
+      const { value: id } = binding.id;
+      groupedBindings[id] = groupedBindings[id] ? groupedBindings[id].concat(binding) : [binding];
+      return groupedBindings;
+    }, {});
+  
+    // Sort the bindings by id (ascending), then, if there are multiple
+    // bindings for a single id, merge them together, aggregating movies as an
+    // array.
+    return Object.keys(bindingsById)
+      .map(id => parseInt(id, 10)) // convert ids from strings to numbers for sorting
+      .sort() // we do this sorting client-side because `Object.keys` ordering is not guaranteed
+      .map(id => {
+        // For each `id`, merge the bindings together as described above.
+        return bindingsById[id].reduce(
+          (bindingForTable, binding) => {
+            // Quick cleanup to remove IRI data that we don't want to display:
+            const bindingValues = Object.keys(binding).reduce((valueBinding, key) => {
+              const { type, value } = binding[key];
+              valueBinding[key] = type !== "uri" ? value : value.slice(value.lastIndexOf("/") + 1); // data cleanup
+              return valueBinding;
+            }, {});
+            // Aggregate movies on the `movies` property, deleting `movie`:
+            const movies = bindingValues.movie
+              ? bindingForTable.movies.concat(bindingValues.movie)
+              : bindingForTable.movies;
+            delete bindingValues.movie;
+            return {
+              ...bindingForTable,
+              ...bindingValues,
+              movies
+            };
+          },
+          { movies: [] }
+        );
+      });
   }
 }
 

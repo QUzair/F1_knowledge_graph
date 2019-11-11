@@ -18,12 +18,14 @@ You will also see any lint errors in the console.
 Following is a sample query being used for the current Star Wars dataset, once our F1 ttl data is created on stardog 
 we can explore more queries in the StarDog IDE.
 
-`SELECT ?id ?name ?homePlanet ?kind ?movie {`
-  `?subject a ?kind ;`
-    `:id ?id ;`
-    `:name ?name ;`
-    `:appearsIn ?movie .`
-  `?kind rdfs:subClassOf :Character .`
-  `OPTIONAL { ?subject :homePlanet ?homePlanet }`
-`}` 
+```
+SELECT ?id ?name ?homePlanet ?kind ?movie {
+  ?subject a ?kind ;
+    :id ?id ;
+    :name ?name ;
+    :appearsIn ?movie .
+  ?kind rdfs:subClassOf :Character .
+  OPTIONAL { ?subject :homePlanet ?homePlanet }
+}
+``` 
 

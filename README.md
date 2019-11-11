@@ -1,8 +1,10 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# F1 Knowledge Graph Front End 
 
-## Available Scripts
+## Load Data to STARDOG
+In the project directory src/data/, you can run:
+`node load-data.js`
 
-In the project directory, you can run:
+This loads the data.ttl file (F1 rdf data in turtle form ) to local Stardog server `localhost:5820`
 
 ### `yarn start`
 

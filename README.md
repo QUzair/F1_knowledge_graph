@@ -1,5 +1,7 @@
 # F1 Knowledge Graph Front End 
 
+## Current Look 
+![Current Look](F1_kg_fe.png)
 
 ## Download and Run StarDog 
 Get Started: [https://www.stardog.com/get-started/](https://www.stardog.com/get-started/)

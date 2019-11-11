@@ -8,7 +8,7 @@ Docs for settings path and all: [https://www.stardog.com/docs/](https://www.star
 ## Load Data to STARDOG
 In the project directory, you can run:
 ```
-src/datanode load-data.js
+node src/data/load-data.js
 ```
 This loads the data.ttl file (F1 rdf data in turtle form ) to local Stardog server `localhost:5820`
 
